@@ -20,7 +20,8 @@
         <div class="field"><label for="l-email">אימייל</label><input id="l-email" name="email" type="email" autocomplete="username" dir="ltr" required></div>
         <div class="field"><label for="l-pw">סיסמה</label><input id="l-pw" name="pw" type="password" autocomplete="current-password" dir="ltr" required></div>
         <p class="error" id="l-err" role="alert" hidden></p>
-        <button class="btn btn-primary btn-wide">כניסה</button></form></div></div>`;
+        <button class="btn btn-primary btn-wide">כניסה</button>
+        <a class="btn btn-quiet" href="${P.url('manage/#/signup')}">אין לי חשבון: פתיחת חשבון</a></form></div></div>`;
   }
   function wireLogin(app) {
     const f = $('#login', app); if (!f) return;

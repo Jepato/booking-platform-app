@@ -88,6 +88,7 @@
         <p class="error" id="l-err" role="alert" hidden></p>
         <button class="btn btn-primary btn-wide" type="submit">כניסה</button>
         <button class="btn btn-quiet" type="button" id="forgot">שכחתי סיסמה</button>
+        <a class="btn btn-quiet" href="#/signup">אין לי חשבון: פתיחת חשבון</a>
       </form>`);
   }
   function wireLogin(app) {
@@ -102,11 +103,12 @@
           if ($('#r-err', b).hidden) { closeSheet(); toast('אם האימייל רשום, נשלח אליו קישור'); } };
       });
   }
+  // with an invite code: join that business; without (#/signup): just an account (the admin makes it useful)
   function joinView(code) {
-    ls.set('manage.invite', code);
+    if (code) ls.set('manage.invite', code);
     if (signedIn()) { S.setup = null; Router.go('/'); return ''; }
-    return authCard(`<h1>הצטרפות</h1>
-      <p class="muted">קיבלת הזמנה לנהל עסק ב${esc(P.name)}. פותחים חשבון עם אימייל וסיסמה.</p>
+    return authCard(`<h1>${code ? 'הצטרפות' : 'פתיחת חשבון'}</h1>
+      <p class="muted">${code ? `קיבלת הזמנה לנהל עסק ב${esc(P.name)}. ` : ''}פותחים חשבון עם אימייל וסיסמה.</p>
       <form id="join" class="stack" novalidate>
         <div class="field"><label for="j-email">אימייל</label><input id="j-email" name="email" type="email" autocomplete="username" dir="ltr" required></div>
         <div class="field"><label for="j-pw">סיסמה (לפחות 8 תווים)</label><input id="j-pw" name="pw" type="password" autocomplete="new-password" dir="ltr" minlength="8" required></div>
@@ -727,6 +729,7 @@
     .route('/look', screen(lookView, { manage: true }), { title: 'מראה', after: wireLook })
     .route('/business', screen(businessView, { manage: true }), { title: 'פרטי העסק', after: wireBusiness })
     .route('/share', screen(shareView), { title: 'קישור', after: wireShare })
+    .route('/signup', () => joinView(null), { title: 'פתיחת חשבון', after: wireJoin })
     .route('*', p => p.startsWith('/join/') ? joinView(p.slice(6)) : (Router.go('/'), ''), { title: 'הצטרפות', after: wireJoin });
   if (recovery === 'recovery') location.hash = '#/reset';
   Router.start({ app: '#app', title: t => `${t} · ${S.setup ? T().name : P.name}` });
