@@ -51,10 +51,13 @@
     user: () => session && session.user,
     async signIn(email, password) { setSession(await call('/auth/v1/token?grant_type=password', { email: email.trim(), password }, false)); return session.user; },
     // Supabase returns a session at once when e-mail confirmation is off, or only a user when it is on
-    async signUp(email, password) {
-      const r = await call('/auth/v1/signup', { email: email.trim(), password }, false);
+    // the confirmation e-mail brings the person back here (Supabase must list this address under Redirect URLs)
+    async signUp(email, password, redirectTo) {
+      const r = await call('/auth/v1/signup' + (redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : ''), { email: email.trim(), password }, false);
       if (r && r.access_token) setSession(r);
-      return { needsConfirm: !(r && r.access_token) };
+      // an address that is already registered comes back as a user with no identities (Supabase hides it on purpose)
+      const user = r && (r.user || r);
+      return { needsConfirm: !(r && r.access_token), exists: !!(user && Array.isArray(user.identities) && user.identities.length === 0) };
     },
     async signOut() { try { await call('/auth/v1/logout', {}, true); } catch {} setSession(null); },
     recover: (email, redirectTo) => call('/auth/v1/recover' + (redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : ''), { email: email.trim() }, false),

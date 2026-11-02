@@ -122,7 +122,8 @@
     f.onsubmit = async e => { e.preventDefault();
       if (f.pw.value.length < 8) { $('#j-err').textContent = 'הסיסמה צריכה לפחות 8 תווים.'; $('#j-err').hidden = false; return; }
       await busy(f.querySelector('[type=submit]'), async () => {
-        const r = await API.auth.signUp(f.email.value, f.pw.value);
+        const r = await API.auth.signUp(f.email.value, f.pw.value, P.url('manage/'));
+        if (r.exists) { app.innerHTML = authCard(`<h1>כבר יש לך חשבון</h1><p>האימייל <bdi dir="ltr">${esc(f.email.value)}</bdi> כבר רשום. נכנסים עם הסיסמה שלו.</p><a class="btn btn-primary" href="#/login">לכניסה</a>`); return; }
         if (r.needsConfirm) { app.innerHTML = authCard(`<h1>בדקו את האימייל</h1><p>שלחנו קישור אישור ל-<bdi dir="ltr">${esc(f.email.value)}</bdi>. אחרי האישור נכנסים כאן, וההזמנה תופעל.</p><a class="btn btn-primary" href="#/login">לכניסה</a>`); return; }
         S.setup = null; Router.go('/');
       }, $('#j-err')).catch(() => {}); };
