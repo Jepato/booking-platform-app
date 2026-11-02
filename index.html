@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>קביעת תור</title>
+<meta name="description" content="קביעת תור אונליין">
+<meta name="theme-color" content="#f6f1e9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="book.css">
+</head>
+<body>
+<a class="skip" href="#app">דילוג לתוכן</a>
+<main id="app" aria-live="polite">
+  <div class="boot" role="status"><span class="spinner" aria-hidden="true"></span><span class="vh">טוען…</span></div>
+</main>
+
+<dialog class="sheet" id="details" aria-labelledby="details-t">
+  <div class="sheet-grip" aria-hidden="true"></div>
+  <div class="sheet-body">
+    <h2 id="details-t" class="sheet-title">כמעט סיימנו</h2>
+    <p class="sum" id="details-sum"></p>
+    <form id="details-form" novalidate>
+      <div class="field">
+        <label for="f-name">שם</label>
+        <input id="f-name" name="name" autocomplete="name" required maxlength="60" enterkeyhint="next">
+      </div>
+      <div class="field">
+        <label for="f-phone">טלפון נייד</label>
+        <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" required maxlength="20" enterkeyhint="next" placeholder="050-000-0000">
+        <p class="hint" id="f-phone-hint">לאישור ולתזכורת בלבד</p>
+      </div>
+      <div class="field">
+        <label for="f-note">הערה לעסק <span class="opt">(לא חובה)</span></label>
+        <textarea id="f-note" name="note" rows="2" maxlength="300"></textarea>
+      </div>
+      <div id="ts" style="min-height:0;margin-bottom:12px" hidden></div>
+      <p class="form-error" id="details-error" role="alert" hidden></p>
+      <p class="hint" style="margin-bottom:12px">השם והטלפון נשמרים אצל העסק לצורך התור בלבד. <a class="link" href="#/privacy" data-close>מדיניות פרטיות</a></p>
+      <button class="btn btn-primary btn-wide" type="submit" id="details-submit">קביעת התור</button>
+      <button class="btn btn-quiet btn-wide" type="button" data-close>חזרה לשעות</button>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="sheet" id="cancel" aria-labelledby="cancel-t">
+  <div class="sheet-grip" aria-hidden="true"></div>
+  <div class="sheet-body">
+    <h2 id="cancel-t" class="sheet-title">לבטל את התור?</h2>
+    <p class="sum" id="cancel-sum"></p>
+    <p class="form-error" id="cancel-error" role="alert" hidden></p>
+    <div class="stack">
+      <button class="btn btn-danger btn-wide" type="button" id="cancel-yes">כן, לבטל</button>
+      <button class="btn btn-quiet btn-wide" type="button" data-close>לא, להשאיר</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="shared/config.js"></script>
+<script src="shared/biz.js"></script>
+<script src="shared/sheet.js"></script>
+<script src="shared/router.js"></script>
+<script src="shared/themes.js"></script>
+<script src="shared/api.js"></script>
+<script src="book.js"></script>
+</body>
+</html>
