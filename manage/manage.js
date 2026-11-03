@@ -178,7 +178,7 @@
           </div>
           <div class="week">${days.map(d => { const n = S.agenda.filter(b => dayOf(b) === d && b.status !== 'cancelled').length;
             return `<button class="wd ${d === today ? 'today' : ''}" type="button" data-day="${d}" aria-pressed="${d === S.day}" aria-label="${Biz.DAY_HE[wd(d)]} ${+d.slice(8)}.${+d.slice(5, 7)}, ${n} תורים">
-              <span class="small">${Biz.DAY_LETTER[wd(d)]}</span><b>${+d.slice(8)}</b><i>${n ? n : ''}</i></button>`; }).join('')}</div>
+              ${d === S.day ? '<span class="wd-ring" aria-hidden="true"></span>' : ''}<span class="small">${Biz.DAY_LETTER[wd(d)]}</span><b>${+d.slice(8)}</b><i>${n ? n : ''}</i></button>`; }).join('')}</div>
           ${S.day !== today ? `<button class="btn btn-quiet btn-sm" type="button" data-day="${today}">חזרה להיום</button>` : ''}
         </section>
         <section class="section" aria-labelledby="h-day">
@@ -219,6 +219,8 @@
       </div></section>`;
   }
   function wireDiary(app) {
+    if (!wireDiary.drawn) { wireDiary.drawn = true;   /* the hour bars grow in once, on the first diary of the visit */
+      Motion.stagger($$('.bars i', app), [{ transform: 'scaleY(0)' }, { transform: 'none' }], { each: 20, max: 16, duration: 360 }); }
     $$('[data-day]', app).forEach(b => b.onclick = () => { S.day = b.dataset.day; Router.refresh(); });
     $$('[data-week]', app).forEach(b => b.onclick = () => { S.day = addDays(S.day, +b.dataset.week); Router.refresh(); });
     $$('[data-b]', app).forEach(b => b.onclick = () => bookingSheet(S.agenda.find(x => x.id === b.dataset.b)));

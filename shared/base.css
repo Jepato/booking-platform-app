@@ -33,7 +33,7 @@ a { color: inherit; }
 :where(button, a, [role=button]) { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 :where(h1, h2, h3, p, li, figcaption, blockquote) { overflow-wrap: break-word; }
 :where(.flex-child, [class*=grid] > *) { min-width: 0; }
-table, .num, time, data, [data-num] { font-variant-numeric: tabular-nums; }
+table, .num, time, data, [data-num], bdi { font-variant-numeric: tabular-nums; }   /* bdi: prices, times and phones in Hebrew text */
 bdi, .ltr { unicode-bidi: isolate; }
 
 [hidden] { display: none !important; }   /* a component's display:flex must never beat the hidden attribute */

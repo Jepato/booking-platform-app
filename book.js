@@ -118,7 +118,7 @@
   const eligibleStaff = sid => biz.staff.filter(st => !st.service_ids.length || st.service_ids.includes(sid)
     || !biz.staff.some(x => x.service_ids.includes(sid)));
   function book() {
-    document.body.classList.remove('has-bar');
+    document.body.style.removeProperty('--bar-h'); document.body.classList.remove('has-bar');
     const sid = qs().get('s');
     if (sid && biz.services.some(s => s.id === sid)) { if (pick.service !== sid) { pick.service = sid; pick.staff = null; pick.day = null; pick.time = null; } }
     const s = biz.services.find(x => x.id === pick.service);
@@ -193,15 +193,17 @@
         <span class="d1">${Biz.DAY_LETTER[wdOf(d)]}</span><span class="d2">${+d.slice(8)}</span><span class="d3">${k === 0 ? 'היום' : !n ? (closed ? 'סגור' : 'מלא') : ''}</span></button>`;
     }).join('');
     daysEl.querySelectorAll('[data-day]').forEach(btn => btn.onclick = () => {
-      pick.day = btn.dataset.day; pick.time = null; daysEl.querySelectorAll('[data-day]').forEach(x => x.setAttribute('aria-pressed', x === btn)); showTimes();
+      pick.day = btn.dataset.day; pick.time = null; daysEl.querySelectorAll('[data-day]').forEach(x => x.setAttribute('aria-pressed', x === btn));
+      Motion.indicator(daysEl, btn); showTimes();
     });
     const sel = daysEl.querySelector('[aria-pressed=true]'); if (sel) sel.scrollIntoView({ block: 'nearest', inline: 'center' });
+    Motion.indicator(daysEl, sel, { instant: true });   /* the selection slides between days instead of blinking */
     showTimes();
   }
   function setTime(at) {
     pick.time = at;
     const s = biz.services.find(x => x.id === pick.service);
-    $('#big-time').textContent = at ? hm(at) : '--:--';
+    Motion.swap($('#big-time'), at ? hm(at) : '--:--');
     $('#big-sub').textContent = at ? `פנוי · מסתיים ב-${hm(new Date(at.getTime() + s.duration_min * 60000))}` : ' ';
     $('#sum-when').textContent = at ? `${dayWord(pick.day)} · ${hm(at)}` : 'בחירת שעה';
     $('#continue').disabled = !at;
@@ -269,6 +271,7 @@
       } else r = await API.rpc('public_book', args);
       remember.set({ name, phone: ph.local }); f.note.value = '';
       slotCache.clear(); pick.time = null;
+      const bar = document.querySelector('.sumbar'); if (bar) bar.style.viewTransitionName = 'ticket';   /* the bar becomes the ticket (wireTicket names the other end) */
       Sheet.close('#details'); location.hash = '#/t/' + r.token;
     } catch (ex) {
       err.textContent = API.say(ex); err.hidden = false;
@@ -283,7 +286,7 @@
     return `<svg class="barcode" viewBox="0 0 ${x} 34" width="${x * 1.6}" height="34" aria-hidden="true" fill="currentColor">${bars}</svg>`;
   }
   async function ticket(token) {
-    document.body.classList.remove('has-bar', 'has-sum');
+    document.body.style.removeProperty('--bar-h'); document.body.classList.remove('has-bar', 'has-sum');
     let b;
     try { b = await API.rpc('public_booking', { p_token: token }); }
     catch (e) { return `<div class="state"><h1>לא מצאנו את התור</h1><p>${esc(API.say(e))}</p><a class="btn btn-primary" href="#/">לעמוד של ${esc(biz.name)}</a></div>`; }
@@ -293,12 +296,12 @@
     const title = `${b.service} · ${b.business.name}`;
     const cal = { title, start: at, minutes: b.duration_min, location: b.business.address || '', description: `ניהול התור: ${bookingUrl(token)}` };
     const hours = Math.round(b.cancel_until_min / 60);
-    ticket.current = { b, token };
+    ticket.current = { b, token, fresh };
     return `
       <div class="wrap">
         <div class="flow-top"><a class="icon-btn" href="#/" aria-label="לעמוד העסק">${icon('i-arrow-right')}</a><span class="lbl">${esc(b.business.name)}</span></div>
         <div class="done-head">
-          <span class="check">${icon(cancelled ? 'i-x' : 'i-check')}</span>
+          <span class="check">${fresh && !cancelled ? '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path class="m-check-draw" d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : icon(cancelled ? 'i-x' : 'i-check')}</span>
           <div><h1>${cancelled ? 'התור בוטל' : fresh ? 'התור נקבע' : 'התור שלך'}</h1>
             <p>${esc(b.service)}, ${esc(longDay(at))} ב-${hm(at)}</p></div>
         </div>
@@ -338,6 +341,11 @@
       </div>`;
   }
   function wireTicket(app) {
+    const t = app.querySelector('.ticket');
+    if (t && ticket.current.fresh) {
+      t.style.viewTransitionName = 'ticket'; setTimeout(() => { t.style.viewTransitionName = ''; }, 900);
+      Motion.check(app.querySelector('.m-check-draw'), { delay: 420 });
+    }
     const copy = app.querySelector('#t-copy');
     if (copy) copy.onclick = async () => { const i = $('#t-link');
       try { await navigator.clipboard.writeText(i.value); copy.lastChild.textContent = 'הועתק'; } catch { i.select(); } };
@@ -347,14 +355,19 @@
   }
   $('#cancel-yes').onclick = async () => {
     const btn = $('#cancel-yes'); btn.setAttribute('aria-busy', 'true');
-    try { await API.rpc('public_cancel', { p_token: ticket.current.token }); slotCache.clear(); Sheet.close('#cancel'); Router.refresh(); }
+    try { await API.rpc('public_cancel', { p_token: ticket.current.token }); slotCache.clear(); Sheet.close('#cancel');
+      const stub = document.querySelector('.ticket-stub');
+      if (stub && !Motion.reduced()) { stub.style.transformOrigin = 'right top';
+        await stub.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(36px) rotate(5deg)', opacity: 0 }],
+          { duration: 420, delay: 200, easing: 'cubic-bezier(.55,.055,.675,.19)', fill: 'forwards' }).finished.catch(() => {}); }
+      Router.refresh(); }
     catch (e) { $('#cancel-error').textContent = API.say(e); $('#cancel-error').hidden = false; }
     finally { btn.removeAttribute('aria-busy'); }
   };
 
   // ---------------------------------------------------------------- privacy (a plain, honest page per business; a draft for a lawyer to approve)
   function privacy() {
-    document.body.classList.remove('has-bar', 'has-sum');
+    document.body.style.removeProperty('--bar-h'); document.body.classList.remove('has-bar', 'has-sum');
     const n = esc(biz.name), contact = biz.phone ? `<bdi dir="ltr">${esc(Biz.phone(biz.phone).local || biz.phone)}</bdi>` : 'דרך פרטי הקשר בעמוד';
     return `<div class="wrap" style="padding-bottom:40px">
       <div class="flow-top"><a class="icon-btn" href="#/" aria-label="חזרה">${icon('i-arrow-right')}</a><span class="lbl">${n}</span></div>
@@ -392,7 +405,12 @@
     head('meta', { name: 'apple-mobile-web-app-title', content: biz.name });
     head('meta', { name: 'apple-mobile-web-app-capable', content: 'yes' });
     const d = document.querySelector('meta[name=description]'); if (d) d.content = biz.config.tagline || `קביעת תור ב${biz.name}`;
-    Router.route('/', home, { title: biz.name })
+    Router.route('/', home, { title: biz.name, after: app => {
+        /* the bar's real height (the note line can wrap, fonts load late) is the page's bottom padding, so nothing hides under it */
+        const bar = app.querySelector('.cta-bar'); if (bar && 'ResizeObserver' in window) new ResizeObserver(([e]) => {
+          if (document.body.classList.contains('has-bar')) document.body.style.setProperty('--bar-h', Math.ceil(e.target.getBoundingClientRect().height) + 'px'); }).observe(bar);
+        if (start.played) return; start.played = true;   /* one load moment, first screen only */
+        Motion.stagger(app.querySelectorAll('.home-head .title, .home-head .tagline, .home-head .giant, .services > *'), undefined, { each: 60, max: 6 }); } })
       .route('/book', book, { title: 'קביעת תור', after: wireBook })
       .route('/privacy', privacy, { title: 'מדיניות פרטיות' })
       .route('*', async p => p.startsWith('/t/') ? ticket(p.slice(3)) : home(), { after: (app, p) => p.startsWith('/t/') && wireTicket(app) });

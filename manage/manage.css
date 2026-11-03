@@ -163,7 +163,9 @@ main { padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom) + 24px); 
 .wd b { color: var(--ink); font-family: var(--font-display); font-size: 26px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
 .wd i { font-style: normal; font-size: 11px; font-weight: 800; min-height: 14px; }
 .wd i::before { content: ""; }
-.wd[aria-pressed=true] { background: var(--brand-soft); box-shadow: inset 0 0 0 2px var(--brand); }
+.wd { position: relative; }
+.wd[aria-pressed=true] { background: var(--brand-soft); }
+.wd-ring { position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--brand); pointer-events: none; view-transition-name: wd-ring; }   /* glides to the new day (shared/motion.css) */
 .wd.today b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; }
 
 /* ---- sheet ---- */
@@ -215,3 +217,13 @@ dialog.sheet { background: var(--surface); color: var(--ink); }
 .seg { display: inline-flex; padding: 3px; gap: 3px; border-radius: 12px; background: var(--sunken); }
 .seg button { min-height: 40px; padding: 0 14px; border-radius: 9px; font-weight: 800; color: var(--muted); }
 .seg button[aria-pressed=true] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); }
+
+/* ---- motion (shared/motion.css + motion.js). The owner opens these screens many times a day, so screens only
+   cross-fade (no slide) and the shared pieces move fast: the pill nav tab grows into place, the day ring glides. ---- */
+:root[data-vt]::view-transition-old(root) { animation-name: vt-out; animation-duration: 120ms; }
+:root[data-vt]::view-transition-new(root) { animation-name: vt-in; animation-duration: 180ms; animation-delay: 0ms; }
+::view-transition-group(*) { animation-duration: 260ms; animation-timing-function: var(--ease-out); }
+.tabs { view-transition-name: tabs; }
+.tabs a:nth-child(1) { view-transition-name: tab-1; } .tabs a:nth-child(2) { view-transition-name: tab-2; }
+.tabs a:nth-child(3) { view-transition-name: tab-3; } .tabs a:nth-child(4) { view-transition-name: tab-4; }
+.bars i { transform-origin: bottom; }

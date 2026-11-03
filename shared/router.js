@@ -4,6 +4,7 @@
      first pointerdown skips the transition (bug found in the reference build: "I tapped and nothing happened")
    - scroll position is kept per route (back returns to where you were); a new screen starts at the top
    - focus moves to the new screen's h1 (tabindex=-1) and the title is announced, so screen readers know the screen changed
+   - with motion.css loaded, forward screens slide 16px in reading direction and Back slides the other way
    - reduced motion: no transition at all
    Usage:
      Router.route('/', () => homeHTML());          // return HTML string or a Node; may be async
@@ -42,7 +43,10 @@
       current = p; lastNav = 'push';
     };
     if (document.startViewTransition && !reduce() && current !== null) {
+      /* forward / back tells motion.css which way the screens slide (flipped for RTL); base.css alone just cross-fades */
+      const root = document.documentElement; root.dataset.vt = lastNav === 'pop' ? 'back' : 'forward';
       vt = document.startViewTransition(swap);
+      vt.finished.catch(() => {}).finally(() => { if (root.dataset.vt !== 'flood') delete root.dataset.vt; });
       // a transition the browser skips (page hidden, a newer one) rejects these; the swap itself still happens
       vt.ready.catch(() => {}); vt.updateCallbackDone.catch(() => {});
       vt.finished.catch(() => {}).finally(() => { vt = null; });
